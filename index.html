@@ -3,238 +3,203 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TableCraft Pro ULTIMATE</title>
+    <title>TableCraft Pro (Ultimate Studio)</title>
+    <script src="https://unpkg.com/docx@7.1.0/build/index.js" onerror="libError('docx')"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" onerror="libError('jspdf')"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" onerror="libError('html2canvas')"></script>
+
     <style>
-        :root { 
-            --primary: #4f46e5; --danger: #ef4444; --success: #10b981; 
-            --accent: #f59e0b; --bg: #f8fafc; --border: #e2e8f0; 
-        }
-        body { font-family: 'Inter', system-ui, -apple-system; background: var(--bg); padding: 20px; color: #1e293b; margin: 0; }
+        :root { --primary: #4f46e5; --bg: #f8fafc; --border: #e2e8f0; --success: #10b981; --danger: #ef4444; --warning: #f59e0b; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); padding: 20px; color: #1e293b; margin: 0; }
         .container { max-width: 1400px; margin: auto; background: #fff; padding: 25px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); border: 1px solid var(--border); }
         
-        .io-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
-        .io-box { display: flex; flex-direction: column; }
-        .io-box label { font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; color: #64748b; }
-        textarea { width: 100%; height: 90px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Fira Code', monospace; font-size: 12px; resize: none; transition: border 0.2s; }
-        
-        .toolbar { display: flex; flex-wrap: wrap; gap: 12px; background: #f1f5f9; padding: 15px; border-radius: 12px; margin-bottom: 20px; align-items: center; }
-        .btn-group { display: flex; background: #fff; padding: 4px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        
-        button { border: none; background: transparent; color: #475569; padding: 8px 12px; cursor: pointer; font-size: 12px; font-weight: 600; border-radius: 6px; transition: 0.2s; }
-        button:hover { background: #f8fafc; color: var(--primary); }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: #4338ca; color: white; }
-        .btn-danger:hover { color: var(--danger); background: #fef2f2; }
+        .io-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .io-box label { font-weight: 700; font-size: 11px; text-transform: uppercase; margin-bottom: 8px; color: #64748b; display: block; }
+        textarea, .title-input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; box-sizing: border-box; outline: none; }
+        textarea { height: 80px; font-family: monospace; }
 
-        .dim-input { display: flex; align-items: center; gap: 8px; padding-left: 12px; border-left: 2px solid var(--border); }
-        input[type="number"] { width: 60px; border: 1px solid var(--border); padding: 7px; border-radius: 6px; font-size: 12px; }
-
-        #tableWrapper { overflow: auto; border: 1px solid var(--border); border-radius: 8px; background: #fff; max-height: 50vh; }
-        table { border-collapse: collapse; table-layout: fixed; min-width: 100%; }
-        td { border: 1px solid var(--border); padding: 10px; min-width: 100px; outline: none; font-size: 14px; position: relative; background: #fff; }
+        .toolbar-stack { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; background: #f1f5f9; padding: 15px; border-radius: 12px; border: 1px solid var(--border); }
+        .toolbar-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .control-group { display: flex; align-items: center; gap: 8px; background: #fff; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border); }
         
-        .selected { background: #e0e7ff !important; box-shadow: inset 0 0 0 2px var(--primary); z-index: 2; }
-        .frozen { position: sticky; left: 0; background: #f8fafc !important; font-weight: bold; border-right: 2px solid var(--primary) !important; z-index: 10; }
+        button { border: none; background: transparent; color: #475569; padding: 6px 10px; cursor: pointer; font-size: 11px; font-weight: 700; border-radius: 6px; transition: 0.2s; text-transform: uppercase; }
+        button:hover { background: #f1f5f9; color: var(--primary); }
+        .btn-main { background: var(--primary); color: white; }
+        .btn-img { background: var(--warning); color: white; }
+        .btn-danger { color: var(--danger); }
+
+        #tableWrapper { overflow: auto; border: 1px solid var(--border); border-radius: 8px; background: #fff; min-height: 250px; padding: 30px; display: flex; flex-direction: column; align-items: center; }
+        #captureArea { padding: 20px; background: white; border-radius: 4px; } /* Target for image export */
+        table { border-collapse: collapse; transform-origin: top center; background: white; table-layout: fixed; width: 100%; }
+        caption { font-size: 1.6rem; font-weight: 800; padding-bottom: 15px; color: #0f172a; text-align: center; font-family: inherit; }
+        td { border: 1px solid var(--border); padding: 12px; outline: none; white-space: nowrap; }
+        .selected { box-shadow: inset 0 0 0 2px var(--primary) !important; background: #f5f7ff !important; position: relative; }
+        
+        #status-bar { font-size: 10px; color: #94a3b8; text-align: right; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <div style="margin-bottom: 15px;">
+        <label style="font-size: 11px; font-weight: 800; color: #64748b;">REPORT TITLE</label>
+        <input type="text" id="tableTitle" class="title-input" placeholder="Title..." oninput="updateTitle()">
+    </div>
+
     <div class="io-panels">
         <div class="io-box">
-            <label>📥 CSV Import</label>
-            <textarea id="csvInput" placeholder="Name, Role, Status"></textarea>
-            <button class="btn-primary" onclick="applyCSV()" style="margin-top:8px; border-radius:8px; padding:10px">Build Table & Generate HTML</button>
+            <label>📥 Import</label>
+            <textarea id="csvInput" placeholder="Title&#10;H1, H2&#10;V1, V2"></textarea>
+            <button class="btn-main" onclick="applyCSV()" style="margin-top:8px; width:100%">Generate Table</button>
         </div>
         <div class="io-box">
-            <label>📦 Live HTML Export</label>
+            <label>📦 Export (DOCX, PDF, PNG, JPG)</label>
             <textarea id="output" readonly></textarea>
-            <button class="btn-primary" onclick="copyHTML()" style="margin-top:8px; background: var(--success); border-radius:8px; padding:10px">Copy HTML Code</button>
+            <div style="display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap;">
+                <button onclick="smartExportDoc()" style="background:#2b5797; color:white">Word</button>
+                <button onclick="smartExportPdf()" style="background:var(--danger); color:white">PDF</button>
+                <button class="btn-img" onclick="exportAsImage('png')">PNG Image</button>
+                <button class="btn-img" onclick="exportAsImage('jpg')">JPG Image</button>
+                <button class="btn-main" onclick="copyHTML()" style="margin-left:auto">Copy HTML</button>
+            </div>
         </div>
     </div>
 
-    <div class="toolbar">
-        <div class="btn-group">
-            <button onclick="addRow()" title="Add Row Below">+ Row</button>
-            <button onclick="deleteRow()" class="btn-danger" title="Delete Selected Row">- Row</button>
+    <div class="toolbar-stack">
+        <div class="toolbar-row">
+            <button style="background:#dcfce7; color:#166534" onclick="autoFitCells()">✨ Auto-Fit Text</button>
+            <div class="control-group">
+                <label>Format</label>
+                <input type="color" oninput="applyStyle('color', this.value)" title="Text Color">
+                <input type="color" oninput="applyStyle('backgroundColor', this.value)" value="#ffffff" title="Bg Color">
+                <button onclick="toggleBold()">B</button>
+                <button onclick="applyStyle('textAlign', 'center')">Center</button>
+            </div>
+            <div class="control-group">
+                <label>Scale</label>
+                <input type="range" id="tableScale" min="0.5" max="1.5" step="0.1" value="1" oninput="applyScale(this.value)">
+            </div>
         </div>
-
-        <div class="btn-group">
-            <button onclick="addCol()" title="Add Column Right">+ Col</button>
-            <button onclick="deleteCol()" class="btn-danger" title="Delete Selected Column">- Col</button>
-        </div>
-
-        <div class="btn-group">
-            <button onclick="undo()">Undo</button>
-            <button onclick="redo()">Redo</button>
-        </div>
-
-        <div class="btn-group">
-            <button onclick="mergeCells()">Merge</button>
-            <button onclick="freezeCol()">Freeze Col 1</button>
-        </div>
-
-        <div class="dim-input">
-            <input id="dimW" type="number" placeholder="W px">
-            <button onclick="setDimension('width')">Set Width</button>
-            <input id="dimH" type="number" placeholder="H px">
-            <button onclick="setDimension('height')">Set Height</button>
+        <div class="toolbar-row">
+            <div class="control-group">
+                <button onclick="addRow()">+Row</button><button onclick="addCol()">+Col</button>
+                <button onclick="mergeCells()">Merge</button>
+                <button onclick="undo()">Undo</button>
+                <button onclick="resetGrid()" class="btn-danger">Reset</button>
+            </div>
         </div>
     </div>
 
-    <div id="tableWrapper"></div>
+    <div id="tableWrapper">
+        <div id="captureArea">
+            </div>
+    </div>
+    <div id="status-bar">Syncing...</div>
 </div>
 
 <script>
-let grid = [], history = [], redoStack = [];
-let selectedCells = new Set();
-let isMouseDown = false;
+let grid = [], history = [], selectedCells = new Set(), isMouseDown = false;
+let currentTitle = "", libsLoaded = { docx: true, jspdf: true, html2canvas: true };
 
-function init(r=6, c=4) {
-    grid = Array.from({length: r}, () => 
-        Array.from({length: c}, () => ({value:"", rowspan:1, colspan:1, hidden:false, w:120, h:40}))
-    );
+function libError(l) { libsLoaded[l] = false; updateStatus(); }
+function updateStatus() { document.getElementById('status-bar').innerText = "Mode: Hybrid Editor | Libraries: " + (Object.values(libsLoaded).filter(v=>v).length) + "/3 Ready"; }
+
+function init(r=3, c=3) {
+    grid = Array.from({length: r}, () => Array.from({length: c}, () => ({
+        value:"", rowspan:1, colspan:1, hidden:false, w:140, h:40, align:'left', bold:false, color:'#1e293b', bg:'#ffffff'
+    })));
+    save(); render(); setTimeout(updateStatus, 1000);
+}
+
+// --- NEW: IMAGE EXPORT LOGIC ---
+async function exportAsImage(format) {
+    if(!libsLoaded.html2canvas) return alert("Image library still loading...");
+    const area = document.getElementById('captureArea');
+    
+    // Temporarily disable selection highlights for the photo
+    const selected = document.querySelectorAll('.selected');
+    selected.forEach(el => el.classList.remove('selected'));
+
+    const canvas = await html2canvas(area, {
+        backgroundColor: format === 'jpg' ? '#ffffff' : null,
+        scale: 2 // High definition
+    });
+
+    const link = document.createElement('a');
+    link.download = (currentTitle || 'table-export') + '.' + format;
+    link.href = canvas.toDataURL(`image/${format === 'jpg' ? 'jpeg' : 'png'}`);
+    link.click();
+
+    // Restore highlights
+    selected.forEach(el => el.classList.add('selected'));
+}
+
+function autoFitCells() {
+    const table = document.querySelector('table');
+    table.style.tableLayout = 'auto';
+    table.style.width = 'auto';
+    for (let c = 0; c < grid[0].length; c++) {
+        let maxW = 0;
+        for (let r = 0; r < grid.length; r++) {
+            const el = document.querySelector(`td[data-r="${r}"][data-c="${c}"]`);
+            if (el) maxW = Math.max(maxW, el.scrollWidth);
+        }
+        grid.forEach(row => { if(row[c]) row[c].w = maxW + 10; });
+    }
+    table.style.tableLayout = 'fixed';
+    table.style.width = '100%';
     save(); render();
 }
 
 function render() {
-    let html = '<table border="1" style="border-collapse: collapse; width: 100%; font-family: sans-serif;">\n<tbody>\n';
+    let html = `<table border="1" style="border-collapse: collapse; width: 100%; table-layout: fixed;">\n`;
+    if(currentTitle) html += `  <caption>${currentTitle}</caption>\n`;
+    html += `  <tbody>\n`;
     grid.forEach((row, i) => {
-        html += `  <tr style="height:${row[0]?.h || 40}px">\n`;
+        html += `    <tr style="height:${row[0]?.h}px">\n`;
         row.forEach((cell, j) => {
             if(cell.hidden) return;
             let sel = selectedCells.has(`${i},${j}`) ? 'selected' : '';
-            let style = `width:${cell.w}px; height:${cell.h}px;`;
-            html += `    <td class="${sel}" contenteditable="true" data-r="${i}" data-c="${j}" 
-                        rowspan="${cell.rowspan}" colspan="${cell.colspan}" style="${style}">${cell.value}</td>\n`;
+            let style = `width:${cell.w}px; height:${cell.h}px; text-align:${cell.align}; font-weight:${cell.bold?'bold':'normal'}; color:${cell.color}; background-color:${cell.bg}; white-space: nowrap;`;
+            html += `      <td class="${sel}" contenteditable="true" data-r="${i}" data-c="${j}" rowspan="${cell.rowspan}" colspan="${cell.colspan}" style="${style}">${cell.value}</td>\n`;
         });
-        html += '  </tr>\n';
+        html += `    </tr>\n`;
     });
-    html += '</tbody>\n</table>';
-    
-    document.getElementById('tableWrapper').innerHTML = html;
+    html += `  </tbody>\n</table>`;
+    document.getElementById('captureArea').innerHTML = html;
     document.getElementById('output').value = html;
+    applyScale(document.getElementById('tableScale').value);
     bindEvents();
 }
 
+// Logic & Events
 function bindEvents() {
     document.querySelectorAll('td').forEach(td => {
-        td.onmousedown = (e) => {
-            isMouseDown = true;
-            if(!e.shiftKey) selectedCells.clear();
-            selectedCells.add(`${td.dataset.r},${td.dataset.c}`);
-            render();
-        };
+        td.onmousedown = (e) => { isMouseDown = true; if(!e.shiftKey) selectedCells.clear(); selectedCells.add(`${td.dataset.r},${td.dataset.c}`); render(); };
         td.onmouseenter = () => { if(isMouseDown) { selectedCells.add(`${td.dataset.r},${td.dataset.c}`); render(); } };
-        td.oninput = () => {
-            grid[td.dataset.r][td.dataset.c].value = td.innerText;
-            document.getElementById('output').value = document.getElementById('tableWrapper').innerHTML;
-        };
+        td.oninput = () => { grid[td.dataset.r][td.dataset.c].value = td.innerText; };
         td.onblur = () => save();
     });
 }
-
 window.onmouseup = () => isMouseDown = false;
+function applyStyle(p, v) { selectedCells.forEach(k => { let [r,c]=k.split(',').map(Number); if(p==='color') grid[r][c].color=v; else grid[r][c].bg=v; if(p==='textAlign') grid[r][c].align=v; }); save(); render(); }
+function toggleBold() { selectedCells.forEach(k => { let [r,c]=k.split(',').map(Number); grid[r][c].bold = !grid[r][c].bold; }); save(); render(); }
+function applyCSV() { let lines = document.getElementById('csvInput').value.trim().split('\n'); if(lines[0].split(',').length === 1) { currentTitle = lines[0]; document.getElementById('tableTitle').value = currentTitle; lines.shift(); } grid = lines.map(line => line.split(',').map(v => ({ value:v.trim(), rowspan:1, colspan:1, hidden:false, w:140, h:40, align:'left', bold:false, color:'#1e293b', bg:'#ffffff' }))); save(); render(); }
+function updateTitle() { currentTitle = document.getElementById('tableTitle').value; render(); }
+function applyScale(v) { let t = document.querySelector('table'); if(t) t.style.transform = `scale(${v})`; }
+function addRow() { grid.push(grid[0].map(()=>({...grid[0][0], value:"", rowspan:1, colspan:1, hidden:false}))); save(); render(); }
+function addCol() { grid.forEach(r=>r.push({...r[0], value:"", rowspan:1, colspan:1, hidden:false})); save(); render(); }
+function mergeCells() { if(selectedCells.size < 2) return; let coords = [...selectedCells].map(s => s.split(',').map(Number)); let rMin = Math.min(...coords.map(c => c[0])), rMax = Math.max(...coords.map(c => c[0])), cMin = Math.min(...coords.map(c => c[1])), cMax = Math.max(...coords.map(c => c[1])); grid[rMin][cMin].rowspan = rMax - rMin + 1; grid[rMin][cMin].colspan = cMax - cMin + 1; for(let r=rMin; r<=rMax; r++) for(let c=cMin; c<=cMax; c++) if(r !== rMin || c !== cMin) grid[r][c].hidden = true; selectedCells.clear(); save(); render(); }
+function save() { history.push(JSON.stringify(grid)); if(history.length > 20) history.shift(); }
+function undo() { if(history.length > 1) { history.pop(); grid = JSON.parse(history[history.length-1]); render(); } }
+function resetGrid() { if(confirm("Reset?")) init(); }
+function copyHTML() { let o = document.getElementById('output'); o.select(); navigator.clipboard.writeText(o.value); alert("HTML Copied!"); }
 
-// --- Structural Actions ---
-function addRow() {
-    let cols = grid[0].length;
-    grid.push(Array.from({length: cols}, () => ({value:"", rowspan:1, colspan:1, hidden:false, w:120, h:40})));
-    save(); render();
-}
-
-function deleteRow() {
-    if(grid.length <= 1) return;
-    let selectedArr = [...selectedCells].map(s => s.split(',').map(Number));
-    if(selectedArr.length === 0) return;
-    let rowIndex = selectedArr[0][0];
-    grid.splice(rowIndex, 1);
-    selectedCells.clear();
-    save(); render();
-}
-
-function addCol() {
-    grid.forEach(row => row.push({value:"", rowspan:1, colspan:1, hidden:false, w:120, h:40}));
-    save(); render();
-}
-
-function deleteCol() {
-    if(grid[0].length <= 1) return;
-    let selectedArr = [...selectedCells].map(s => s.split(',').map(Number));
-    if(selectedArr.length === 0) return;
-    let colIndex = selectedArr[0][1];
-    grid.forEach(row => row.splice(colIndex, 1));
-    selectedCells.clear();
-    save(); render();
-}
-
-function setDimension(type) {
-    let val = document.getElementById(type === 'width' ? 'dimW' : 'dimH').value;
-    if(!val) return;
-    selectedCells.forEach(key => {
-        let [r, c] = key.split(',').map(Number);
-        if(type === 'width') grid.forEach(row => { if(row[c]) row[c].w = val; });
-        else grid[r].forEach(cell => cell.h = val);
-    });
-    save(); render();
-}
-
-function mergeCells() {
-    if(selectedCells.size < 2) return;
-    let coords = [...selectedCells].map(s => s.split(',').map(Number));
-    let rMin = Math.min(...coords.map(c => c[0])), rMax = Math.max(...coords.map(c => c[0]));
-    let cMin = Math.min(...coords.map(c => c[1])), cMax = Math.max(...coords.map(c => c[1]));
-    grid[rMin][cMin].rowspan = rMax - rMin + 1;
-    grid[rMin][cMin].colspan = cMax - cMin + 1;
-    for(let r=rMin; r<=rMax; r++) {
-        for(let c=cMin; c<=cMax; c++) {
-            if(r === rMin && c === cMin) continue;
-            grid[r][c].hidden = true;
-        }
-    }
-    selectedCells.clear(); save(); render();
-}
-
-function applyCSV() {
-    let raw = document.getElementById('csvInput').value.trim();
-    if(!raw) return;
-    grid = raw.split('\n').map(line => 
-        line.split(',').map(v => ({value:v.trim(), rowspan:1, colspan:1, hidden:false, w:120, h:40}))
-    );
-    save(); render();
-}
-
-function save() { 
-    history.push(JSON.stringify(grid)); 
-    if(history.length > 20) history.shift();
-    redoStack = []; 
-}
-
-function undo() { 
-    if(history.length <= 1) return; 
-    redoStack.push(history.pop()); 
-    grid = JSON.parse(history[history.length-1]); 
-    render(); 
-}
-
-function redo() { 
-    if(!redoStack.length) return; 
-    let state = redoStack.pop(); 
-    history.push(state); 
-    grid = JSON.parse(state); 
-    render(); 
-}
-
-function copyHTML() {
-    const out = document.getElementById('output');
-    out.select();
-    navigator.clipboard.writeText(out.value);
-    alert("HTML code copied to clipboard!");
-}
-
-function freezeCol() {
-    document.querySelectorAll('td[data-c="0"]').forEach(el => el.classList.toggle('frozen'));
-}
+// PDF/DOC Fallbacks
+function smartExportPdf() { if(libsLoaded.jspdf) { const doc = new window.jspdf.jsPDF(); doc.autoTable({ html: 'table' }); doc.save('table.pdf'); } else window.print(); }
+async function smartExportDoc() { if(libsLoaded.docx) { const { Document, Packer, Paragraph, Table, TableCell, TableRow } = window.docx; const rows = grid.map(r => new TableRow({ children: r.filter(c => !c.hidden).map(c => new TableCell({ children: [new Paragraph(c.value)] })) })); const blob = await Packer.toBlob(new Document({ sections: [{ children: [new Table({ rows })] }] })); saveAs(blob, "table.docx"); } }
 
 init();
 </script>
